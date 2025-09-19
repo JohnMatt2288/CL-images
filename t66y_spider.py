@@ -1,5 +1,6 @@
 # t66y_spider.py
 import os
+import sys
 import time
 import requests
 import logging
@@ -98,10 +99,7 @@ def process_topic(title, link):
     for idx, img_url in enumerate(img_urls, 1):
         download_image(img_url, folder_path, idx)
 
-def main():
-    start = int(input("请输入起始页码: "))
-    end = int(input("请输入结束页码: "))
-
+def main(start, end):
     os.makedirs(IMAGE_DIR, exist_ok=True)
 
     for page in range(start, end + 1):
@@ -115,4 +113,19 @@ def main():
     logger.info("🔚 所有任务完成")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 3:
+        print("用法: python t66y_spider.py <起始页码> <结束页码>")
+        sys.exit(1)
+
+    try:
+        start_page = int(sys.argv[1])
+        end_page = int(sys.argv[2])
+    except ValueError:
+        print("❌ 页码必须是整数")
+        sys.exit(1)
+
+    if start_page > end_page or start_page < 1:
+        print("❌ 页码范围不正确")
+        sys.exit(1)
+
+    main(start_page, end_page)
