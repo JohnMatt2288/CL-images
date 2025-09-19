@@ -1,0 +1,40 @@
+name: Run T66Y Spider
+
+on:
+  workflow_dispatch:   # 允许手动点击运行
+
+jobs:
+  spider:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Spider
+      run: |
+        python t66y_spider.py <<EOF
+        1
+        2
+        EOF
+      shell: bash
+
+    - name: Zip results
+      run: |
+        zip -r downloaded_images.zip downloaded_images || echo "No images"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: downloaded-images
+        path: downloaded_images.zip
