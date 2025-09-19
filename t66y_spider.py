@@ -31,18 +31,19 @@ def get_thread_links(list_url):
 
     links = []
     for td in soup.find_all("td", class_="tal"):
-        text = td.get_text(strip=True)
-        if "[亚洲]" in text or "[亞洲]" in text:  # 支持简体/繁体
+        raw_text = td.get_text()  # 不 strip，保持原始文本
+        if "[亞洲]" in raw_text or "[亚洲]" in raw_text:
             a = td.find("a", href=True)
             if a:
                 href = a["href"]
                 if href.startswith("/"):
                     href = BASE_URL + href
-                links.append(href)
-                logger.info(f"🟢 发现主题: {href}")
+                title = a.get_text(strip=True)
+                links.append((title, href))
+                logger.info(f"🟢 发现主题: {title} -> {href}")
     return links
 
-def download_images_from_thread(url, save_root):
+def download_images_from_thread(title, url, save_root):
     """进入帖子下载图片"""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -52,16 +53,10 @@ def download_images_from_thread(url, save_root):
         logger.error(f"❌ 加载帖子失败 {url} - {e}")
         return
 
-    # 获取帖子标题
-    title_tag = soup.find("title")
-    if title_tag:
-        title = title_tag.get_text(strip=True)
-    else:
-        title = url.split("/")[-1]
-    # 替换非法文件名字符
-    title = title.replace("/", "_").replace("\\", "_").replace(":", "_")[:80]
+    # 处理标题避免非法字符
+    safe_title = title.replace("/", "_").replace("\\", "_").replace(":", "_")[:80]
 
-    thread_dir = os.path.join(save_root, title)
+    thread_dir = os.path.join(save_root, safe_title)
     os.makedirs(thread_dir, exist_ok=True)
 
     img_tags = soup.find_all("img")
@@ -98,8 +93,8 @@ def main(start_page, end_page):
             logger.info("⚠️ 当前页没有符合条件的主题")
             continue
 
-        for link in thread_links:
-            download_images_from_thread(link, IMAGE_DIR)
+        for title, link in thread_links:
+            download_images_from_thread(title, link, IMAGE_DIR)
 
     logger.info("🔚 所有任务完成")
 
