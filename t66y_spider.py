@@ -3,6 +3,7 @@ import sys
 import time
 import logging
 import requests
+import shutil
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
@@ -24,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 def fetch(url):
-    """请求网页"""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=15)
         resp.encoding = "utf-8"
@@ -38,7 +38,6 @@ def fetch(url):
 
 
 def parse_list_page(html):
-    """解析主题列表页，返回 (标题, 链接) 列表"""
     soup = BeautifulSoup(html, "html.parser")
     tbody = soup.find("tbody", id="tbody")
     if not tbody:
@@ -62,7 +61,6 @@ def parse_list_page(html):
 
 
 def parse_detail_page(html):
-    """解析主题详情页，返回图片链接列表"""
     soup = BeautifulSoup(html, "html.parser")
     content = soup.find("div", id="conttpc")
     if not content:
@@ -77,7 +75,6 @@ def parse_detail_page(html):
 
 
 def download_image(img_url, folder, index):
-    """下载图片"""
     try:
         resp = requests.get(img_url, headers=HEADERS, stream=True, timeout=15)
         if resp.status_code != 200:
@@ -104,7 +101,6 @@ def download_image(img_url, folder, index):
 
 
 def crawl_detail(title, url):
-    """抓取详情页图片并保存"""
     html = fetch(url)
     if not html:
         return
@@ -141,7 +137,7 @@ def main(start_page, end_page):
         for title, link in topics:
             logger.info(f"进入主题: {title} -> {link}")
             crawl_detail(title, link)
-            time.sleep(2)  # 延迟避免被封
+            time.sleep(2)
 
 
 if __name__ == "__main__":
@@ -152,4 +148,9 @@ if __name__ == "__main__":
     start_page = int(sys.argv[1])
     end_page = int(sys.argv[2])
     main(start_page, end_page)
+
+    # === 🔽 打包目录为 zip ===
+    zip_file = shutil.make_archive("downloaded_images", "zip", OUTPUT_DIR)
+    logger.info(f"📦 打包完成: {zip_file}")
+
     logger.info("🔚 所有任务完成")
