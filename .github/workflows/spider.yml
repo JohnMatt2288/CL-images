@@ -33,3 +33,9 @@ jobs:
       - name: Run Spider
         run: |
           python t66y_spider.py ${{ github.event.inputs.start_page }} ${{ github.event.inputs.end_page }}
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: downloaded-images
+          path: downloaded_images.zip
