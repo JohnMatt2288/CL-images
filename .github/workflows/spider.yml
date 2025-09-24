@@ -12,6 +12,9 @@ on:
         required: true
         default: "5"
 
+permissions:
+  contents: write   # ✅ 给 GITHUB_TOKEN 写权限
+
 jobs:
   run-spider:
     runs-on: ubuntu-latest
