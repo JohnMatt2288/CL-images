@@ -12,9 +12,6 @@ on:
         required: true
         default: "5"
 
-permissions:
-  contents: write   # ✅ 给 GITHUB_TOKEN 写权限
-
 jobs:
   run-spider:
     runs-on: ubuntu-latest
@@ -37,17 +34,9 @@ jobs:
         run: |
           python t66y_spider.py ${{ github.event.inputs.start_page }} ${{ github.event.inputs.end_page }}
 
-      - name: Prepare artifact branch
-        run: |
-          mkdir -p artifact_output
-          mv downloaded_images.zip artifact_output/ || echo "No zip file found"
-          cd artifact_output
-          echo "Spider run at $(date)" > RUN_INFO.txt
-
-      - name: Push to artifacts branch
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload downloaded_images.zip as Artifact
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: artifacts
-          publish_dir: artifact_output
-          force_orphan: true
+          name: downloaded-images
+          path: downloaded_images.zip
+          if-no-files-found: ignore  # 如果文件不存在也不报错
